@@ -1,89 +1,105 @@
-﻿# NetBoost
+<div align="center">
 
-**你的网速，可能还能再快一点。**
+# NetBoost
 
-自动扫描 / 内置测速 / 一键优化 / 效果对比
+**网络诊断与优化工具**
 
-不用懂技术。不装乱七八糟的软件。一个工具搞定。
+扫描 · 测速 · 诊断 · 优化 · 验证
+
+[![Release](https://img.shields.io/github/v/release/Saint1010-arch/netboost?style=flat-square)](https://github.com/Saint1010-arch/netboost/releases)
+[![License](https://img.shields.io/github/license/Saint1010-arch/netboost?style=flat-square)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.7+-blue?style=flat-square)](https://python.org)
+
+</div>
 
 ---
 
-## 这工具干嘛的？
+## 它解决什么问题
 
-你是不是也这样：
+网速不达标、网页加载慢、视频卡顿——问题可能出在 DNS 配置、Wi-Fi 信道拥堵、MTU 不匹配、代理检测延迟等任何一个环节。
 
-- 明明办了 100M 宽带，感觉跟 10M 一样
-- 网页转圈转半天，视频卡成 PPT
-- 不知道到底是 Wi-Fi 的问题还是运营商的问题
-- 网上搜「怎么提升网速」，教程一堆看不懂
+NetBoost 自动扫描你的网络环境，定位瓶颈，给出可执行的优化方案。优化前后自动对比，验证改善效果。所有改动可一键还原。
 
-**NetBoost 帮你搞定。**
+## 功能
 
-它会自动帮你：
-1. **查** - 扫描你的网络环境，找出到底哪里慢
-2. **测** - 内置测速，不用再开 speedtest 网页
-3. **治** - 列出能改的地方，你点确认它就自动改
-4. **验** - 改完再测一次，前后对比看效果
+| 模块 | 说明 |
+|------|------|
+| 环境扫描 | 接口 / 网关 / DNS / Wi-Fi 信号 / MTU / VPN / 代理 / 丢包 / 延迟 |
+| 内置测速 | 基于 Cloudflare CDN，零依赖，不需要打开浏览器 |
+| 诊断引擎 | 100 分制评分，自动识别 6+ 类问题并排列优先级 |
+| 优化执行 | DNS 切换 / 缓存刷新 / TCP 参数 / 代理检测 / Wi-Fi 重连 / MTU 调整 |
+| 效果验证 | 优化前后自动对比，量化改善幅度 |
+| 一键还原 | 所有改动记录回滚脚本，随时恢复 |
 
-全程你只需要点两下鼠标。改坏了？一键还原。
+## 界面
 
-## 怎么用？
-
-**Windows：** 双击「点我启动.vbs」
-
-**macOS：** 双击 other-platforms/启动 NetBoost.command
-
-**Linux：** 终端运行 bash other-platforms/启动\ NetBoost.sh
-
-没装 Python？启动器会自动弹出下载页面。安装时勾选 Add to PATH 就行。
-
-## 能帮你改什么？
-
-| 优化项 | 效果 | 风险 |
-|--------|------|------|
-| 切换更快的 DNS | 网页打开快 0.1~2 秒 | 低 |
-| 刷新 DNS 缓存 | 解决部分网站打不开 | 低 |
-| 优化 TCP 延迟参数 | 减少 5-20ms 延迟 | 低 |
-| 关闭自动代理检测 | 每次连接少等 0.5-2 秒 | 低 |
-| 重新连接 Wi-Fi | 重连刷新信号 | 低 |
-| 调整 MTU | 减少丢包重传 | 低 |
-
-所有改动都需要你确认。所有改动都能还原。
-
-## 改不了的也会告诉你
-
-- 宽带本身就小 -> 告诉你联系运营商
-- Wi-Fi 太远 -> 告诉你靠近路由器
-- 全小区拥堵 -> 告诉你这不是你的问题
-
-不会假装优化了其实没用。
-
-## 特点
-
-- 不装额外软件，就一个文件夹
-- 双击就跑，有图形界面
-- 内置测速
-- 改之前问你，改完能还原
-- 前后对比一目了然
-- Windows / macOS / Linux 都能用
-- 免费，开源，没广告
-
-## 安全说明
-
-- 扫描阶段只看不改
-- 每步优化都问你
-- 一键还原
-- 不碰 VPN
-- 代码开源可查
-
-## 命令行选项
+Web Dashboard —— 深色主题，数据可视化，浏览器中运行。
 
 ```
-python netboost.py              # 图形界面
-python netboost.py --cli        # 命令行
-python netboost.py --rollback   # 还原所有改动
-python netboost.py --lang en    # English
+python netboost.py
 ```
+
+启动后自动在浏览器打开 `http://127.0.0.1:7890`
+
+## 快速开始
+
+**Windows**
+```
+双击「点我启动.vbs」
+```
+
+**macOS**
+```
+双击 other-platforms/启动 NetBoost.command
+```
+
+**Linux**
+```bash
+bash other-platforms/启动\ NetBoost.sh
+```
+
+**命令行模式**
+```bash
+python netboost.py --cli
+```
+
+## 工作流程
+
+```
+扫描环境 → 测速 → 生成诊断报告 → 展示优化建议
+                                          ↓
+                                 用户确认后执行优化
+                                          ↓
+                                   重新测速 · 前后对比
+```
+
+每一步操作都需要用户确认。不会静默修改任何系统设置。
+
+## 优化项目
+
+| 项目 | 作用 | 风险 |
+|------|------|------|
+| DNS 切换 | 降低域名解析延迟 50-500ms | 低 |
+| DNS 缓存刷新 | 清除过期/错误缓存记录 | 低 |
+| TCP Nagle 关闭 | 减少小包延迟 5-20ms | 低 |
+| 自动代理检测关闭 | 消除每次连接 0.5-2s 的检测等待 | 低 |
+| Wi-Fi 重连 | 重新协商信道，刷新连接状态 | 低 |
+| MTU 调整 | 减少分片重传，降低丢包 | 低 |
+
+## 安全策略
+
+- 扫描阶段只读，不修改设置
+- 优化需逐项确认
+- 不触碰 VPN 配置
+- 所有改动可还原
+- 代码开源可审计
+
+## 技术栈
+
+- Python 3.7+，零外部依赖
+- 前端: HTML/CSS/JS 单页面 Dashboard
+- 后端: Python 内置 HTTPServer
+- 跨平台: Windows / macOS / Linux
 
 ## License
 
