@@ -1,0 +1,11 @@
+﻿__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.exe
+*.spec
+.DS_Store
+Thumbs.db
+netboost_rollback.*

@@ -1,0 +1,63 @@
+﻿name: Build Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyinstaller
+      - run: pyinstaller --onefile --windowed --name NetBoost netboost.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NetBoost-Windows
+          path: dist/NetBoost.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyinstaller
+      - run: pyinstaller --onefile --windowed --name NetBoost netboost.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NetBoost-macOS
+          path: dist/NetBoost
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyinstaller
+      - run: pyinstaller --onefile --name netboost-linux netboost.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NetBoost-Linux
+          path: dist/netboost-linux
+
+  release:
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            NetBoost-Windows/NetBoost.exe
+            NetBoost-macOS/NetBoost
+            NetBoost-Linux/netboost-linux
