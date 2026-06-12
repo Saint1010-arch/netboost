@@ -7,12 +7,11 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0a0e27;--bg2:#0d1233;--bg-card:#111840;--bg-card-hover:#161f55;
+  --bg:#0a0e27;--bg2:#0d1233;--bg-card:#111840;
   --border:#1a2560;--border-glow:#2952e8;--accent:#3b82f6;--accent2:#06b6d4;
   --green:#10b981;--yellow:#f59e0b;--red:#ef4444;--purple:#8b5cf6;
   --text:#e8ecf4;--text-dim:#7b8ab8;--text-muted:#4a5578;
   --glow:0 0 20px rgba(59,130,246,0.15);
-  --glow-strong:0 0 30px rgba(59,130,246,0.3);
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 .container{max-width:1200px;margin:0 auto;padding:24px}
@@ -24,6 +23,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
 .status-text{color:var(--text-dim);font-size:13px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
 .card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden;transition:all .3s ease}
@@ -65,6 +66,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
 .btn-primary{background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;box-shadow:0 4px 15px rgba(59,130,246,0.3)}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,130,246,0.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .btn-secondary{background:var(--bg-card);border:1px solid var(--border);color:var(--text)}
 .btn-secondary:hover{border-color:var(--accent)}
 .btn-danger{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red)}
@@ -83,6 +85,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .log-line.success{color:var(--green)}
 .log-line.warn{color:var(--yellow)}
 .log-line.error{color:var(--red)}
+.progress-hint{text-align:center;padding:16px;color:var(--text-dim);font-size:13px}
+.progress-hint .spinner{margin-right:8px}
 @media(max-width:768px){.grid{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}}
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -96,72 +100,227 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 <div class="container">
   <div class="header">
     <h1>NETBOOST</h1>
-    <div class="subtitle">NETWORK DIAGNOSTICS & OPTIMIZATION</div>
+    <div class="subtitle">网络诊断与优化</div>
   </div>
   <div class="status-bar">
     <div class="status-dot" id="statusDot"></div>
-    <span class="status-text" id="statusText">Ready</span>
+    <span class="status-text" id="statusText">就绪</span>
   </div>
+
+  <!-- 开始按钮 -->
   <div id="startView">
     <div class="btn-group">
-      <button class="btn btn-primary" onclick="startScan()">&#9654; START DIAGNOSIS</button>
+      <button class="btn btn-primary" id="startBtn" onclick="startScan()">&#9654; 开始诊断</button>
     </div>
   </div>
+
+  <!-- 进度提示 -->
+  <div id="progressHint" class="progress-hint hidden">
+    <span class="spinner"></span><span id="progressText">正在扫描网络环境...</span>
+  </div>
+
+  <!-- 数据面板 -->
   <div id="metricsView" class="hidden">
     <div class="grid">
-      <div class="card"><div class="card-title">Download</div><div class="card-value"><span id="valDown">--</span><span class="card-unit">Mbps</span></div><div class="card-change neutral" id="changeDown"></div></div>
-      <div class="card"><div class="card-title">Upload</div><div class="card-value"><span id="valUp">--</span><span class="card-unit">Mbps</span></div><div class="card-change neutral" id="changeUp"></div></div>
-      <div class="card"><div class="card-title">Latency</div><div class="card-value"><span id="valLatency">--</span><span class="card-unit">ms</span></div><div class="card-change neutral" id="changeLatency"></div></div>
-      <div class="card"><div class="card-title">DNS Response</div><div class="card-value"><span id="valDns">--</span><span class="card-unit">ms</span></div><div class="card-change neutral" id="changeDns"></div></div>
+      <div class="card"><div class="card-title">下载速度</div><div class="card-value"><span id="valDown">--</span><span class="card-unit">Mbps</span></div><div class="card-change neutral" id="changeDown"></div></div>
+      <div class="card"><div class="card-title">上传速度</div><div class="card-value"><span id="valUp">--</span><span class="card-unit">Mbps</span></div><div class="card-change neutral" id="changeUp"></div></div>
+      <div class="card"><div class="card-title">网络延迟</div><div class="card-value"><span id="valLatency">--</span><span class="card-unit">ms</span></div><div class="card-change neutral" id="changeLatency"></div></div>
+      <div class="card"><div class="card-title">DNS 响应</div><div class="card-value"><span id="valDns">--</span><span class="card-unit">ms</span></div><div class="card-change neutral" id="changeDns"></div></div>
     </div>
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">Network Score</div>
+        <div class="card-title">网络评分</div>
         <div class="score-ring">
           <svg viewBox="0 0 200 200"><circle class="bg-ring" cx="100" cy="100" r="85"/><circle class="fg-ring" id="scoreRing" cx="100" cy="100" r="85" stroke="var(--accent)" stroke-dasharray="534" stroke-dashoffset="534"/></svg>
           <div class="score-num"><div class="num" id="scoreVal">--</div><div class="label" id="scoreLabel"></div></div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">Environment</div>
+        <div class="card-title">网络环境</div>
         <div id="summaryPanel" style="font-size:13px;line-height:2.2;color:var(--text-dim)">
-          <div>Wi-Fi: <span id="sumWifi" style="color:var(--text)">--</span></div>
-          <div>Signal: <span id="sumSignal" style="color:var(--text)">--</span></div>
-          <div>Gateway: <span id="sumGateway" style="color:var(--text)">--</span></div>
-          <div>Packet Loss: <span id="sumLoss" style="color:var(--text)">--</span></div>
-          <div>DNS: <span id="sumDns" style="color:var(--text)">--</span></div>
+          <div>Wi-Fi 名称: <span id="sumWifi" style="color:var(--text)">--</span></div>
+          <div>信号强度: <span id="sumSignal" style="color:var(--text)">--</span></div>
+          <div>网关延迟: <span id="sumGateway" style="color:var(--text)">--</span></div>
+          <div>丢包率: <span id="sumLoss" style="color:var(--text)">--</span></div>
+          <div>DNS 服务器: <span id="sumDns" style="color:var(--text)">--</span></div>
           <div>MTU: <span id="sumMtu" style="color:var(--text)">--</span></div>
         </div>
       </div>
     </div>
-    <div class="card" style="margin-bottom:24px" id="issuesCard"><div class="card-title">Issues Detected</div><div id="issuesList"></div></div>
+
+    <!-- 问题列表 -->
+    <div class="card" style="margin-bottom:24px" id="issuesCard"><div class="card-title">检测到的问题</div><div id="issuesList"></div></div>
+
+    <!-- 优化建议 -->
     <div class="card" id="actionsCard" style="margin-bottom:24px">
-      <div class="card-title">Optimization Actions</div>
+      <div class="card-title">优化建议</div>
       <div id="actionsList"></div>
-      <div class="btn-group" id="actionBtns"><button class="btn btn-primary" onclick="applyAll()">APPLY ALL</button><button class="btn btn-secondary" onclick="skipOptimize()">SKIP</button></div>
+      <div class="btn-group" id="actionBtns"><button class="btn btn-primary" onclick="applyAll()">全部执行</button><button class="btn btn-secondary" onclick="skipOptimize()">跳过</button></div>
     </div>
-    <div class="card hidden" id="compareCard" style="margin-bottom:24px"><div class="card-title">Before / After</div><div id="compareList"></div></div>
-    <div class="btn-group hidden" id="retestBtns"><button class="btn btn-primary" onclick="retestSpeed()">RE-TEST SPEED</button><button class="btn btn-danger" onclick="rollbackAll()">ROLLBACK ALL</button></div>
+
+    <!-- 对比 -->
+    <div class="card hidden" id="compareCard" style="margin-bottom:24px"><div class="card-title">优化前后对比</div><div id="compareList"></div></div>
+
+    <!-- 验证按钮 -->
+    <div class="btn-group hidden" id="retestBtns"><button class="btn btn-primary" onclick="retestSpeed()">重新测速验证</button><button class="btn btn-danger" onclick="rollbackAll()">还原所有改动</button></div>
   </div>
-  <div class="card" style="margin-top:24px"><div class="card-title">Log</div><div class="log-panel" id="logPanel"></div></div>
+
+  <!-- 日志 -->
+  <div class="card" style="margin-top:24px"><div class="card-title">运行日志</div><div class="log-panel" id="logPanel"></div></div>
 </div>
+
 <script>
 function log(msg,level){const p=document.getElementById('logPanel'),d=document.createElement('div');d.className='log-line '+(level||'info');d.textContent='['+new Date().toLocaleTimeString()+'] '+msg;p.appendChild(d);p.scrollTop=p.scrollHeight}
 function setStatus(t,c){document.getElementById('statusText').textContent=t;const d=document.getElementById('statusDot');d.style.background=c||'var(--green)';d.style.boxShadow='0 0 8px '+(c||'var(--green)')}
+function showProgress(text){document.getElementById('progressHint').classList.remove('hidden');document.getElementById('progressText').textContent=text}
+function hideProgress(){document.getElementById('progressHint').classList.add('hidden')}
 function setScore(s){const r=document.getElementById('scoreRing'),c=2*Math.PI*85,o=c-(s/100)*c;r.style.strokeDashoffset=o;let col='var(--green)';if(s<60)col='var(--red)';else if(s<80)col='var(--yellow)';r.style.stroke=col;animNum(document.getElementById('scoreVal'),0,s,1200)}
 function animNum(el,f,t,d){const s=performance.now();function u(n){const p=Math.min((n-s)/d,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(f+(t-f)*e);if(p<1)requestAnimationFrame(u)}requestAnimationFrame(u)}
 async function api(ep,data){const r=await fetch('/api/'+ep,{method:data?'POST':'GET',headers:{'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined});return r.json()}
-async function startScan(){document.getElementById('startView').classList.add('hidden');document.getElementById('metricsView').classList.remove('hidden');setStatus('Scanning...','var(--accent)');log('Starting network scan...');try{const scan=await api('scan');log('Scan complete','success');updateSummary(scan);setStatus('Running speed test...','var(--yellow)');log('Speed test...');const speed=await api('speedtest');log('Speed: '+speed.download_mbps+' Mbps down / '+speed.upload_mbps+' Mbps up','success');updateSpeed(speed);setStatus('Analyzing...','var(--purple)');log('Diagnosing...');const diag=await api('diagnose');log('Score: '+diag.score+'/100','success');updateDiagnosis(diag);setStatus('Diagnosis complete','var(--green)')}catch(e){log('Error: '+e.message,'error');setStatus('Error','var(--red)')}}
-function updateSummary(s){const w=s.wifi||{};document.getElementById('sumWifi').textContent=w.ssid||'N/A';document.getElementById('sumSignal').textContent=w.signal_pct?w.signal_pct+'%':'--';const g=s.ping_gateway||{};document.getElementById('sumGateway').textContent=g.avg_ms?g.avg_ms+' ms':'--';document.getElementById('sumLoss').textContent=g.loss_pct!=null?g.loss_pct+'%':'--';document.getElementById('sumDns').textContent=(s.dns||{}).servers?s.dns.servers.join(', '):'--';document.getElementById('sumMtu').textContent=(s.mtu||{}).current||'--'}
+
+async function startScan(){
+  document.getElementById('startView').classList.add('hidden');
+  document.getElementById('metricsView').classList.remove('hidden');
+
+  // 阶段 1: 扫描
+  setStatus('正在扫描网络环境...','var(--accent)');
+  showProgress('正在扫描网络接口、DNS、Wi-Fi、网关...');
+  log('开始扫描网络环境...');
+  try{
+    const scan=await api('scan');
+    log('扫描完成，正在准备测速','success');
+    updateSummary(scan);
+
+    // 阶段 2: 测速
+    setStatus('正在测速，请稍候...','var(--yellow)');
+    showProgress('正在测试网速，大约需要 10-20 秒...');
+    log('开始测速（通过 Cloudflare CDN）...');
+    const speed=await api('speedtest');
+    log('测速完成: 下载 '+speed.download_mbps+' Mbps / 上传 '+speed.upload_mbps+' Mbps','success');
+    updateSpeed(speed);
+
+    // 阶段 3: 诊断分析
+    setStatus('正在分析诊断结果...','var(--purple)');
+    showProgress('正在分析网络数据，生成诊断报告...');
+    log('生成诊断报告...');
+    const diag=await api('diagnose');
+    log('诊断完成，网络评分: '+diag.score+'/100','success');
+    updateDiagnosis(diag);
+
+    hideProgress();
+    setStatus('诊断完成 — 查看下方结果','var(--green)');
+  }catch(e){
+    hideProgress();
+    log('出错: '+e.message,'error');
+    setStatus('出错了','var(--red)');
+  }
+}
+
+function updateSummary(s){const w=s.wifi||{};document.getElementById('sumWifi').textContent=w.ssid||'未检测到';document.getElementById('sumSignal').textContent=w.signal_pct?w.signal_pct+'%':'--';const g=s.ping_gateway||{};document.getElementById('sumGateway').textContent=g.avg_ms?g.avg_ms+' ms':'--';document.getElementById('sumLoss').textContent=g.loss_pct!=null?g.loss_pct+'%':'--';document.getElementById('sumDns').textContent=(s.dns||{}).servers?s.dns.servers.join(', '):'--';document.getElementById('sumMtu').textContent=(s.mtu||{}).current||'--'}
 function updateSpeed(s){document.getElementById('valDown').textContent=s.download_mbps||'--';document.getElementById('valUp').textContent=s.upload_mbps||'--';document.getElementById('valLatency').textContent=s.latency_ms||'--';document.getElementById('valDns').textContent=s.dns_avg_ms||'--'}
-function updateDiagnosis(d){setScore(d.score);document.getElementById('scoreLabel').textContent=d.score_label||'';const il=document.getElementById('issuesList');il.innerHTML='';(d.issues||[]).forEach(i=>{const div=document.createElement('div');div.className='issue-item';div.innerHTML='<div class="issue-severity '+i.severity+'"></div><div><div class="issue-title">'+i.title+'</div><div class="issue-detail">'+i.evidence+'</div><span class="issue-tag">'+i.category+' · '+i.risk+'</span></div>';il.appendChild(div)});if(!d.issues||!d.issues.length)il.innerHTML='<div style="color:var(--green);padding:12px">No issues detected</div>';const al=document.getElementById('actionsList');al.innerHTML='';(d.actions||[]).forEach((a,i)=>{const div=document.createElement('div');div.className='action-item';div.id='action-'+i;div.innerHTML='<div class="action-info"><div class="action-title">'+a.title+'</div><div class="action-desc">'+a.description+'</div></div><button class="action-btn" onclick="applySingle('+i+')">APPLY</button>';al.appendChild(div)});if(!d.actions||!d.actions.length)document.getElementById('actionsCard').classList.add('hidden')}
-async function applySingle(i){const b=document.querySelector('#action-'+i+' .action-btn');b.textContent='...';b.className='action-btn running';log('Applying #'+(i+1)+'...');try{const r=await api('optimize',{index:i});b.textContent=r.success?'DONE':'FAIL';b.className='action-btn '+(r.success?'done':'');log(r.message||'Done',r.success?'success':'warn')}catch(e){b.textContent='FAIL';log(e.message,'error')}document.getElementById('retestBtns').classList.remove('hidden')}
-async function applyAll(){setStatus('Optimizing...','var(--yellow)');log('Applying all...');try{const r=await api('optimize-all');log(r.success_count+'/'+r.total+' applied','success');document.querySelectorAll('.action-btn').forEach((b,i)=>{const x=r.results[i];b.textContent=x&&x.success?'DONE':'FAIL';b.className='action-btn '+(x&&x.success?'done':'')});document.getElementById('actionBtns').classList.add('hidden');document.getElementById('retestBtns').classList.remove('hidden');setStatus('Optimized — re-test to verify','var(--green)')}catch(e){log(e.message,'error');setStatus('Error','var(--red)')}}
-function skipOptimize(){document.getElementById('actionsCard').classList.add('hidden');setStatus('Done','var(--green)')}
-async function retestSpeed(){setStatus('Re-testing...','var(--yellow)');log('Re-testing speed...');try{const r=await api('retest');log('Done','success');if(r.speed)updateSpeed(r.speed);if(r.comparison)showComparison(r.comparison);setStatus('Comparison ready','var(--green)')}catch(e){log(e.message,'error')}}
-function showComparison(c){const card=document.getElementById('compareCard');card.classList.remove('hidden');const list=document.getElementById('compareList');list.innerHTML='';const mx=Math.max(...c.items.map(i=>Math.max(i.before||0,i.after||0)));c.items.forEach(item=>{const row=document.createElement('div');row.className='compare-row';const bw=mx>0?(item.before/mx*100):0,aw=mx>0?(item.after/mx*100):0;const cls=item.improved?'up':item.unchanged?'neutral':'down';const txt=item.unchanged?'--':(item.change_pct>0?'+':'')+item.change_pct+'%';row.innerHTML='<div class="compare-label">'+item.name+'</div><div class="compare-bars"><div class="compare-bar before" style="width:'+Math.max(bw,8)+'%">'+item.before+' '+item.unit+'</div><div class="compare-bar after" style="width:'+Math.max(aw,8)+'%">'+item.after+' '+item.unit+'</div></div><div class="compare-change '+cls+'">'+txt+'</div>';list.appendChild(row)});updateSpeedChange(c)}
-function updateSpeedChange(c){if(!c||!c.items)return;c.items.forEach(item=>{let id='';if(item.name.includes('下载'))id='changeDown';else if(item.name.includes('上传'))id='changeUp';else if(item.name.includes('延迟'))id='changeLatency';else if(item.name.includes('DNS'))id='changeDns';if(id){const el=document.getElementById(id);const p=item.change_pct;if(item.improved){el.className='card-change up';el.textContent=(p>0?'\u2191':'\u2193')+' '+Math.abs(p)+'%'}else if(item.unchanged){el.className='card-change neutral';el.textContent='--'}else{el.className='card-change down';el.textContent=(p>0?'\u2191':'\u2193')+' '+Math.abs(p)+'%'}}})}
-async function rollbackAll(){if(!confirm('Rollback all changes?'))return;setStatus('Rolling back...','var(--yellow)');log('Rolling back...');try{const r=await api('rollback');log(r.message||'Done','success');setStatus('Rolled back','var(--green)')}catch(e){log(e.message,'error')}}
+
+function updateDiagnosis(d){
+  setScore(d.score);
+  document.getElementById('scoreLabel').textContent=d.score_label||'';
+  const il=document.getElementById('issuesList');il.innerHTML='';
+  (d.issues||[]).forEach(i=>{
+    const div=document.createElement('div');div.className='issue-item';
+    div.innerHTML='<div class="issue-severity '+i.severity+'"></div><div><div class="issue-title">'+i.title+'</div><div class="issue-detail">'+i.evidence+'</div><span class="issue-tag">'+i.category+' · 风险: '+i.risk+'</span></div>';
+    il.appendChild(div);
+  });
+  if(!d.issues||!d.issues.length)il.innerHTML='<div style="color:var(--green);padding:12px">未检测到明显问题</div>';
+  const al=document.getElementById('actionsList');al.innerHTML='';
+  (d.actions||[]).forEach((a,i)=>{
+    const div=document.createElement('div');div.className='action-item';div.id='action-'+i;
+    div.innerHTML='<div class="action-info"><div class="action-title">'+a.title+'</div><div class="action-desc">'+a.description+'</div></div><button class="action-btn" onclick="applySingle('+i+')">执行</button>';
+    al.appendChild(div);
+  });
+  if(!d.actions||!d.actions.length)document.getElementById('actionsCard').classList.add('hidden');
+}
+
+async function applySingle(i){
+  const b=document.querySelector('#action-'+i+' .action-btn');
+  b.textContent='执行中...';b.className='action-btn running';
+  log('正在执行优化 #'+(i+1)+'...');
+  try{
+    const r=await api('optimize',{index:i});
+    b.textContent=r.success?'已完成':'失败';
+    b.className='action-btn '+(r.success?'done':'');
+    log(r.message||'完成',r.success?'success':'warn');
+  }catch(e){b.textContent='失败';log(e.message,'error')}
+  document.getElementById('retestBtns').classList.remove('hidden');
+}
+
+async function applyAll(){
+  setStatus('正在执行优化...','var(--yellow)');
+  showProgress('正在逐项执行优化操作...');
+  log('批量执行所有优化...');
+  try{
+    const r=await api('optimize-all');
+    log('优化完成: '+r.success_count+'/'+r.total+' 项成功','success');
+    document.querySelectorAll('.action-btn').forEach((b,i)=>{const x=r.results[i];b.textContent=x&&x.success?'已完成':'失败';b.className='action-btn '+(x&&x.success?'done':'')});
+    document.getElementById('actionBtns').classList.add('hidden');
+    document.getElementById('retestBtns').classList.remove('hidden');
+    hideProgress();
+    setStatus('优化完成 — 建议重新测速验证效果','var(--green)');
+  }catch(e){hideProgress();log(e.message,'error');setStatus('执行出错','var(--red)')}
+}
+
+function skipOptimize(){document.getElementById('actionsCard').classList.add('hidden');setStatus('诊断完成','var(--green)')}
+
+async function retestSpeed(){
+  setStatus('正在重新测速...','var(--yellow)');
+  showProgress('正在重新测速，与优化前对比...');
+  log('开始优化后测速...');
+  try{
+    const r=await api('retest');
+    log('测速完成','success');
+    hideProgress();
+    if(r.speed)updateSpeed(r.speed);
+    if(r.comparison)showComparison(r.comparison);
+    setStatus('对比完成 — 查看改善效果','var(--green)');
+  }catch(e){hideProgress();log('测速失败: '+e.message,'error')}
+}
+
+function showComparison(c){
+  const card=document.getElementById('compareCard');card.classList.remove('hidden');
+  const list=document.getElementById('compareList');list.innerHTML='';
+  const mx=Math.max(...c.items.map(i=>Math.max(i.before||0,i.after||0)));
+  c.items.forEach(item=>{
+    const row=document.createElement('div');row.className='compare-row';
+    const bw=mx>0?(item.before/mx*100):0,aw=mx>0?(item.after/mx*100):0;
+    const cls=item.improved?'up':item.unchanged?'neutral':'down';
+    const txt=item.unchanged?'--':(item.change_pct>0?'+':'')+item.change_pct+'%';
+    row.innerHTML='<div class="compare-label">'+item.name+'</div><div class="compare-bars"><div class="compare-bar before" style="width:'+Math.max(bw,8)+'%">'+item.before+' '+item.unit+'</div><div class="compare-bar after" style="width:'+Math.max(aw,8)+'%">'+item.after+' '+item.unit+'</div></div><div class="compare-change '+cls+'">'+txt+'</div>';
+    list.appendChild(row);
+  });
+  updateSpeedChange(c);
+}
+
+function updateSpeedChange(c){
+  if(!c||!c.items)return;
+  c.items.forEach(item=>{
+    let id='';
+    if(item.name.includes('下载'))id='changeDown';
+    else if(item.name.includes('上传'))id='changeUp';
+    else if(item.name.includes('延迟'))id='changeLatency';
+    else if(item.name.includes('DNS'))id='changeDns';
+    if(id){
+      const el=document.getElementById(id);const p=item.change_pct;
+      if(item.improved){el.className='card-change up';el.textContent=(p>0?'\u2191':'\u2193')+' '+Math.abs(p)+'%'}
+      else if(item.unchanged){el.className='card-change neutral';el.textContent='— 无变化'}
+      else{el.className='card-change down';el.textContent=(p>0?'\u2191':'\u2193')+' '+Math.abs(p)+'%'}
+    }
+  });
+}
+
+async function rollbackAll(){
+  if(!confirm('确认还原所有优化改动？'))return;
+  setStatus('正在还原...','var(--yellow)');
+  log('还原所有改动...');
+  try{const r=await api('rollback');log(r.message||'完成','success');setStatus('已还原','var(--green)')}
+  catch(e){log(e.message,'error')}
+}
 </script>
 </body>
 </html>
