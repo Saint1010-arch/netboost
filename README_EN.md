@@ -1,38 +1,46 @@
-﻿# NetBoost
+<div align="center">
 
-**Your network speed, one click faster.**
+# NetBoost
 
-Auto scan / Built-in speed test / One-click optimize / Before-after comparison
+**Network Diagnostics & Optimization**
+
+Scan . Speedtest . Diagnose . Optimize . Verify
+
+[![Release](https://img.shields.io/github/v/release/Saint1010-arch/netboost?style=flat-square)](https://github.com/Saint1010-arch/netboost/releases)
+[![License](https://img.shields.io/github/license/Saint1010-arch/netboost?style=flat-square)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.7+-blue?style=flat-square)](https://python.org)
+
+</div>
 
 ---
 
-## What is this?
+## What It Does
 
-A zero-dependency tool that finds why your internet is slow and fixes it.
+Identifies why your network is slow and fixes it.
 
-1. **Scan** your network
-2. **Test** your speed (built-in)
-3. **Diagnose** the bottleneck
-4. **Optimize** with your approval
-5. **Verify** with before/after comparison
+Scans DNS, Wi-Fi signal, MTU, proxy settings, packet loss, and latency. Runs a built-in speed test. Generates a scored diagnosis with actionable fixes. Applies optimizations with your confirmation. Re-tests and shows before/after comparison. Full rollback available.
 
 ## Quick Start
 
-**Windows:** Double-click "点我启动.vbs"
+```bash
+python netboost.py          # Opens web dashboard at localhost:7890
+python netboost.py --cli    # CLI mode
+```
 
-**macOS:** Double-click other-platforms/启动 NetBoost.command
-
-**Linux:** bash other-platforms/启动\ NetBoost.sh
-
-**Power users:** python netboost.py
+**Windows:** Double-click `launcher.bat`
+**macOS:** Double-click `other-platforms/NetBoost.command`
+**Linux:** `bash other-platforms/NetBoost.sh`
 
 ## Features
 
-- Zero dependencies
-- GUI + CLI
-- Built-in speed test
+- Zero dependencies - pure Python 3.7+
+- Web dashboard with dark theme
+- Built-in speed test (Cloudflare CDN)
+- 100-point scoring system
+- 6+ optimization types (DNS, TCP, MTU, Wi-Fi, proxy, cache)
+- Before/after comparison
+- One-click rollback
 - Cross-platform
-- Free and open source
 
 ## License
 

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetBoost</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e27;--bg2:#0d1233;--bg-card:#111840;--bg-card-hover:#161f55;
+  --border:#1a2560;--border-glow:#2952e8;--accent:#3b82f6;--accent2:#06b6d4;
+  --green:#10b981;--yellow:#f59e0b;--red:#ef4444;--purple:#8b5cf6;
+  --text:#e8ecf4;--text-dim:#7b8ab8;--text-muted:#4a5578;
+  --glow:0 0 20px rgba(59,130,246,0.15);
+  --glow-strong:0 0 30px rgba(59,130,246,0.3);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.header{text-align:center;padding:32px 0 24px;position:relative}
+.header::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:60%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.header h1{font-size:28px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.header .subtitle{color:var(--text-dim);font-size:14px;letter-spacing:1px}
+.status-bar{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0 32px;padding:12px 24px;background:var(--bg2);border:1px solid var(--border);border-radius:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+.status-text{color:var(--text-dim);font-size:13px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden;transition:all .3s ease}
+.card:hover{border-color:var(--border-glow);box-shadow:var(--glow)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s}
+.card:hover::before{opacity:1}
+.card-title{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-title::before{content:'';width:3px;height:12px;background:var(--accent);border-radius:2px}
+.card-value{font-size:32px;font-weight:700;color:#fff;line-height:1}
+.card-unit{font-size:14px;color:var(--text-dim);margin-left:4px;font-weight:400}
+.card-change{font-size:12px;margin-top:6px}
+.card-change.up{color:var(--green)}
+.card-change.down{color:var(--red)}
+.card-change.neutral{color:var(--text-muted)}
+.score-ring{position:relative;width:200px;height:200px;margin:0 auto}
+.score-ring svg{width:200px;height:200px;transform:rotate(-90deg)}
+.score-ring .bg-ring{fill:none;stroke:var(--border);stroke-width:8}
+.score-ring .fg-ring{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1.5s ease,stroke .5s}
+.score-ring .score-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.score-ring .score-num .num{font-size:56px;font-weight:800;color:#fff}
+.score-ring .score-num .label{font-size:13px;color:var(--text-dim);margin-top:4px}
+.issue-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:8px;margin-bottom:10px;transition:border-color .2s}
+.issue-item:hover{border-color:var(--border-glow)}
+.issue-severity{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.issue-severity.critical{background:var(--red);box-shadow:0 0 8px var(--red)}
+.issue-severity.warning{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+.issue-severity.info{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.issue-title{font-size:14px;font-weight:500;margin-bottom:4px}
+.issue-detail{font-size:12px;color:var(--text-dim);line-height:1.5}
+.issue-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);color:var(--accent);margin-top:6px}
+.action-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--border);border-radius:8px;margin-bottom:10px}
+.action-info{flex:1}
+.action-title{font-size:14px;font-weight:500}
+.action-desc{font-size:12px;color:var(--text-dim);margin-top:2px}
+.action-btn{padding:8px 16px;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s}
+.action-btn:hover{background:var(--accent);color:#fff}
+.action-btn.done{border-color:var(--green);color:var(--green);cursor:default}
+.action-btn.running{border-color:var(--yellow);color:var(--yellow);cursor:wait}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;box-shadow:0 4px 15px rgba(59,130,246,0.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,130,246,0.4)}
+.btn-secondary{background:var(--bg-card);border:1px solid var(--border);color:var(--text)}
+.btn-secondary:hover{border-color:var(--accent)}
+.btn-danger{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red)}
+.btn-group{display:flex;gap:12px;justify-content:center;margin:24px 0}
+.compare-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.compare-row:last-child{border-bottom:none}
+.compare-label{width:80px;font-size:13px;color:var(--text-dim);flex-shrink:0}
+.compare-bars{flex:1;display:flex;flex-direction:column;gap:4px}
+.compare-bar{height:22px;border-radius:4px;display:flex;align-items:center;padding:0 10px;font-size:11px;color:#fff;min-width:40px;transition:width 1s ease}
+.compare-bar.before{background:linear-gradient(90deg,#374151,#4b5563);opacity:.7}
+.compare-bar.after{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.compare-change{width:80px;text-align:right;font-size:12px;font-weight:600;flex-shrink:0}
+.log-panel{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;max-height:200px;overflow-y:auto;font-family:'JetBrains Mono','Fira Code',monospace;font-size:12px;line-height:1.8}
+.log-line{color:var(--text-dim)}
+.log-line.info{color:var(--accent2)}
+.log-line.success{color:var(--green)}
+.log-line.warn{color:var(--yellow)}
+.log-line.error{color:var(--red)}
+@media(max-width:768px){.grid{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .5s ease forwards}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>NETBOOST</h1>
+    <div class="subtitle">NETWORK DIAGNOSTICS & OPTIMIZATION</div>
+  </div>
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-text" id="statusText">Ready</span>
+  </div>
+  <div id="startView">
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="startScan()">&#9654; START DIAGNOSIS</button>
+    </div>
+  </div>
+  <div id="metricsView" class="hidden">
+    <div class="grid">
+      <div class="card"><div class="card-title">Download</div><div class="card-value"><span id="valDown">--</span><span class="card-unit">Mbps</span></div><div class="card-change neutral" id="changeDown"></div></div>
+      <div class="card"><div class="card-title">Upload</div><div class="card-value"><span id="valUp">--</span><span class="card-unit">Mbps</span></div><div class="card-change neutral" id="changeUp"></div></div>
+      <div class="card"><div class="card-title">Latency</div><div class="card-value"><span id="valLatency">--</span><span class="card-unit">ms</span></div><div class="card-change neutral" id="changeLatency"></div></div>
+      <div class="card"><div class="card-title">DNS Response</div><div class="card-value"><span id="valDns">--</span><span class="card-unit">ms</span></div><div class="card-change neutral" id="changeDns"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Network Score</div>
+        <div class="score-ring">
+          <svg viewBox="0 0 200 200"><circle class="bg-ring" cx="100" cy="100" r="85"/><circle class="fg-ring" id="scoreRing" cx="100" cy="100" r="85" stroke="var(--accent)" stroke-dasharray="534" stroke-dashoffset="534"/></svg>
+          <div class="score-num"><div class="num" id="scoreVal">--</div><div class="label" id="scoreLabel"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Environment</div>
+        <div id="summaryPanel" style="font-size:13px;line-height:2.2;color:var(--text-dim)">
+          <div>Wi-Fi: <span id="sumWifi" style="color:var(--text)">--</span></div>
+          <div>Signal: <span id="sumSignal" style="color:var(--text)">--</span></div>
+          <div>Gateway: <span id="sumGateway" style="color:var(--text)">--</span></div>
+          <div>Packet Loss: <span id="sumLoss" style="color:var(--text)">--</span></div>
+          <div>DNS: <span id="sumDns" style="color:var(--text)">--</span></div>
+          <div>MTU: <span id="sumMtu" style="color:var(--text)">--</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:24px" id="issuesCard"><div class="card-title">Issues Detected</div><div id="issuesList"></div></div>
+    <div class="card" id="actionsCard" style="margin-bottom:24px">
+      <div class="card-title">Optimization Actions</div>
+      <div id="actionsList"></div>
+      <div class="btn-group" id="actionBtns"><button class="btn btn-primary" onclick="applyAll()">APPLY ALL</button><button class="btn btn-secondary" onclick="skipOptimize()">SKIP</button></div>
+    </div>
+    <div class="card hidden" id="compareCard" style="margin-bottom:24px"><div class="card-title">Before / After</div><div id="compareList"></div></div>
+    <div class="btn-group hidden" id="retestBtns"><button class="btn btn-primary" onclick="retestSpeed()">RE-TEST SPEED</button><button class="btn btn-danger" onclick="rollbackAll()">ROLLBACK ALL</button></div>
+  </div>
+  <div class="card" style="margin-top:24px"><div class="card-title">Log</div><div class="log-panel" id="logPanel"></div></div>
+</div>
+<script>
+function log(msg,level){const p=document.getElementById('logPanel'),d=document.createElement('div');d.className='log-line '+(level||'info');d.textContent='['+new Date().toLocaleTimeString()+'] '+msg;p.appendChild(d);p.scrollTop=p.scrollHeight}
+function setStatus(t,c){document.getElementById('statusText').textContent=t;const d=document.getElementById('statusDot');d.style.background=c||'var(--green)';d.style.boxShadow='0 0 8px '+(c||'var(--green)')}
+function setScore(s){const r=document.getElementById('scoreRing'),c=2*Math.PI*85,o=c-(s/100)*c;r.style.strokeDashoffset=o;let col='var(--green)';if(s<60)col='var(--red)';else if(s<80)col='var(--yellow)';r.style.stroke=col;animNum(document.getElementById('scoreVal'),0,s,1200)}
+function animNum(el,f,t,d){const s=performance.now();function u(n){const p=Math.min((n-s)/d,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(f+(t-f)*e);if(p<1)requestAnimationFrame(u)}requestAnimationFrame(u)}
+async function api(ep,data){const r=await fetch('/api/'+ep,{method:data?'POST':'GET',headers:{'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined});return r.json()}
+async function startScan(){document.getElementById('startView').classList.add('hidden');document.getElementById('metricsView').classList.remove('hidden');setStatus('Scanning...','var(--accent)');log('Starting network scan...');try{const scan=await api('scan');log('Scan complete','success');updateSummary(scan);setStatus('Running speed test...','var(--yellow)');log('Speed test...');const speed=await api('speedtest');log('Speed: '+speed.download_mbps+' Mbps down / '+speed.upload_mbps+' Mbps up','success');updateSpeed(speed);setStatus('Analyzing...','var(--purple)');log('Diagnosing...');const diag=await api('diagnose');log('Score: '+diag.score+'/100','success');updateDiagnosis(diag);setStatus('Diagnosis complete','var(--green)')}catch(e){log('Error: '+e.message,'error');setStatus('Error','var(--red)')}}
+function updateSummary(s){const w=s.wifi||{};document.getElementById('sumWifi').textContent=w.ssid||'N/A';document.getElementById('sumSignal').textContent=w.signal_pct?w.signal_pct+'%':'--';const g=s.ping_gateway||{};document.getElementById('sumGateway').textContent=g.avg_ms?g.avg_ms+' ms':'--';document.getElementById('sumLoss').textContent=g.loss_pct!=null?g.loss_pct+'%':'--';document.getElementById('sumDns').textContent=(s.dns||{}).servers?s.dns.servers.join(', '):'--';document.getElementById('sumMtu').textContent=(s.mtu||{}).current||'--'}
+function updateSpeed(s){document.getElementById('valDown').textContent=s.download_mbps||'--';document.getElementById('valUp').textContent=s.upload_mbps||'--';document.getElementById('valLatency').textContent=s.latency_ms||'--';document.getElementById('valDns').textContent=s.dns_avg_ms||'--'}
+function updateDiagnosis(d){setScore(d.score);document.getElementById('scoreLabel').textContent=d.score_label||'';const il=document.getElementById('issuesList');il.innerHTML='';(d.issues||[]).forEach(i=>{const div=document.createElement('div');div.className='issue-item';div.innerHTML='<div class="issue-severity '+i.severity+'"></div><div><div class="issue-title">'+i.title+'</div><div class="issue-detail">'+i.evidence+'</div><span class="issue-tag">'+i.category+' · '+i.risk+'</span></div>';il.appendChild(div)});if(!d.issues||!d.issues.length)il.innerHTML='<div style="color:var(--green);padding:12px">No issues detected</div>';const al=document.getElementById('actionsList');al.innerHTML='';(d.actions||[]).forEach((a,i)=>{const div=document.createElement('div');div.className='action-item';div.id='action-'+i;div.innerHTML='<div class="action-info"><div class="action-title">'+a.title+'</div><div class="action-desc">'+a.description+'</div></div><button class="action-btn" onclick="applySingle('+i+')">APPLY</button>';al.appendChild(div)});if(!d.actions||!d.actions.length)document.getElementById('actionsCard').classList.add('hidden')}
+async function applySingle(i){const b=document.querySelector('#action-'+i+' .action-btn');b.textContent='...';b.className='action-btn running';log('Applying #'+(i+1)+'...');try{const r=await api('optimize',{index:i});b.textContent=r.success?'DONE':'FAIL';b.className='action-btn '+(r.success?'done':'');log(r.message||'Done',r.success?'success':'warn')}catch(e){b.textContent='FAIL';log(e.message,'error')}document.getElementById('retestBtns').classList.remove('hidden')}
+async function applyAll(){setStatus('Optimizing...','var(--yellow)');log('Applying all...');try{const r=await api('optimize-all');log(r.success_count+'/'+r.total+' applied','success');document.querySelectorAll('.action-btn').forEach((b,i)=>{const x=r.results[i];b.textContent=x&&x.success?'DONE':'FAIL';b.className='action-btn '+(x&&x.success?'done':'')});document.getElementById('actionBtns').classList.add('hidden');document.getElementById('retestBtns').classList.remove('hidden');setStatus('Optimized — re-test to verify','var(--green)')}catch(e){log(e.message,'error');setStatus('Error','var(--red)')}}
+function skipOptimize(){document.getElementById('actionsCard').classList.add('hidden');setStatus('Done','var(--green)')}
+async function retestSpeed(){setStatus('Re-testing...','var(--yellow)');log('Re-testing speed...');try{const r=await api('retest');log('Done','success');if(r.speed)updateSpeed(r.speed);if(r.comparison)showComparison(r.comparison);setStatus('Comparison ready','var(--green)')}catch(e){log(e.message,'error')}}
+function showComparison(c){const card=document.getElementById('compareCard');card.classList.remove('hidden');const list=document.getElementById('compareList');list.innerHTML='';const mx=Math.max(...c.items.map(i=>Math.max(i.before||0,i.after||0)));c.items.forEach(item=>{const row=document.createElement('div');row.className='compare-row';const bw=mx>0?(item.before/mx*100):0,aw=mx>0?(item.after/mx*100):0;const cls=item.improved?'up':item.unchanged?'neutral':'down';const txt=item.unchanged?'--':(item.change_pct>0?'+':'')+item.change_pct+'%';row.innerHTML='<div class="compare-label">'+item.name+'</div><div class="compare-bars"><div class="compare-bar before" style="width:'+Math.max(bw,8)+'%">'+item.before+' '+item.unit+'</div><div class="compare-bar after" style="width:'+Math.max(aw,8)+'%">'+item.after+' '+item.unit+'</div></div><div class="compare-change '+cls+'">'+txt+'</div>';list.appendChild(row)});updateSpeedChange(c)}
+function updateSpeedChange(c){if(!c||!c.items)return;c.items.forEach(item=>{let id='';if(item.name.includes('下载'))id='changeDown';else if(item.name.includes('上传'))id='changeUp';else if(item.name.includes('延迟'))id='changeLatency';else if(item.name.includes('DNS'))id='changeDns';if(id){const el=document.getElementById(id);const p=item.change_pct;if(item.improved){el.className='card-change up';el.textContent=(p>0?'\u2191':'\u2193')+' '+Math.abs(p)+'%'}else if(item.unchanged){el.className='card-change neutral';el.textContent='--'}else{el.className='card-change down';el.textContent=(p>0?'\u2191':'\u2193')+' '+Math.abs(p)+'%'}}})}
+async function rollbackAll(){if(!confirm('Rollback all changes?'))return;setStatus('Rolling back...','var(--yellow)');log('Rolling back...');try{const r=await api('rollback');log(r.message||'Done','success');setStatus('Rolled back','var(--green)')}catch(e){log(e.message,'error')}}
+</script>
+</body>
+</html>
